@@ -1,0 +1,46 @@
+version: "3"
+
+services:
+
+  mongo_database:
+    image: mongo:6
+    container_name: mongo_database
+    restart: always
+    volumes:
+      - ./mongodb:/data/db
+
+  nightscout:
+    image: nightscout/cgm-remote-monitor:latest
+    container_name: nightscout
+    restart: always
+    depends_on:
+      - mongo_database
+    env_file: ./.env
+    labels:
+      - "traefik.enable=true"
+      # Change the Host from `example` to host which you have
+      - "traefik.http.routers.nightscout.rule=Host(`example`)"
+      - "traefik.http.routers.nightscout.entrypoints=websecure"
+      - "traefik.http.routers.nightscout.tls.certresolver=le"
+  
+  traefik:
+    image: traefik:latest
+    container_name: traefik
+    restart: always
+    command:
+      - "--providers.docker=true"
+      - "--providers.docker.exposedbydefault=false"
+      - "--entrypoints.web.address=:80"
+      - "--entrypoints.web.http.redirections.entrypoint.to=websecure"
+      - "--entrypoints.websecure.address=:443"
+      - "--certificatesresolvers.le.acme.httpchallenge=true"
+      - "--certificatesresolvers.le.acme.httpchallenge.entrypoint=web"
+      - "--certificatesresolvers.le.acme.storage=/letsencrypt/acme.json"
+      # Change the below to match your email address
+      - "--certificatesresolvers.le.acme.email=example@example.com"
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - "./letsencrypt:/letsencrypt"
+      - "/var/run/docker.sock:/var/run/docker.sock:ro"

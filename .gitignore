@@ -1,0 +1,18 @@
+# Editors
+.vscode/
+.idea/
+
+# Vagrant
+.vagrant/
+
+# Mac/OSX
+.DS_Store
+
+# Windows
+Thumbs.db
+
+# mkdocs documentation
+/site
+
+# Alt. Data reports path
+.reports/
